@@ -65,12 +65,31 @@ class LeadSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         person_type = attrs.get('person_type') or getattr(self.instance, 'person_type', None)
+        has_individual_payload = 'individual' in attrs
+        has_legal_entity_payload = 'legal_entity' in attrs
         individual = attrs.get('individual')
         legal_entity = attrs.get('legal_entity')
-        if person_type == Lead.PersonType.INDIVIDUAL and not individual:
-            raise serializers.ValidationError('Os dados da pessoa física são obrigatórios para o lead.')
-        if person_type == Lead.PersonType.LEGAL_ENTITY and not legal_entity:
-            raise serializers.ValidationError('Os dados da pessoa jurídica são obrigatórios para o lead.')
+        existing_individual = getattr(self.instance, 'individual', None) if self.instance else None
+        existing_legal_entity = getattr(self.instance, 'legal_entity', None) if self.instance else None
+
+        if person_type == Lead.PersonType.INDIVIDUAL:
+            if has_individual_payload:
+                if not individual:
+                    raise serializers.ValidationError(
+                        'Os dados da pessoa física são obrigatórios para o lead.'
+                    )
+            elif not existing_individual:
+                raise serializers.ValidationError('Os dados da pessoa física são obrigatórios para o lead.')
+
+        if person_type == Lead.PersonType.LEGAL_ENTITY:
+            if has_legal_entity_payload:
+                if not legal_entity:
+                    raise serializers.ValidationError(
+                        'Os dados da pessoa jurídica são obrigatórios para o lead.'
+                    )
+            elif not existing_legal_entity:
+                raise serializers.ValidationError('Os dados da pessoa jurídica são obrigatórios para o lead.')
+
         attrs = super().validate(attrs)
         return self._ensure_representative(attrs)
 

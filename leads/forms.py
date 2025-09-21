@@ -78,9 +78,24 @@ class LeadDocumentsForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        if self.person_type == Lead.PersonType.LEGAL_ENTITY and not cleaned_data.get('articles_of_association'):
-            self.add_error('articles_of_association', 'O Contrato Social é obrigatório para Pessoa Jurídica.')
+        instance = getattr(self, 'instance', None)
+
+        def has_file(field_name: str) -> bool:
+            file_value = cleaned_data.get(field_name)
+            if file_value:
+                return True
+            if file_value is False:  # ClearableFileInput retorna False quando não há novo upload.
+                file_value = None
+            if instance and getattr(instance, field_name):
+                return True
+            return False
+
+        if self.person_type == Lead.PersonType.LEGAL_ENTITY and not has_file('articles_of_association'):
+            self.add_error(
+                'articles_of_association',
+                'O Contrato Social é obrigatório para Pessoa Jurídica.',
+            )
         for field_name in ('id_document_front', 'id_document_back', 'energy_bill'):
-            if not cleaned_data.get(field_name):
+            if not has_file(field_name):
                 self.add_error(field_name, 'Este documento é obrigatório.')
         return cleaned_data
