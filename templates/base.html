@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}CRM - Gestão de Leads{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" />
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+    {% block extra_css %}{% endblock %}
+  </head>
+  <body>
+    <header class="crm-header">
+      <div class="container">
+        <h1 class="crm-title">CRM - Gestão de Leads</h1>
+        <p class="crm-subtitle">Controle completo do funil comercial da prospecção à conversão.</p>
+      </div>
+    </header>
+    <main class="container">
+      {% block content %}{% endblock %}
+    </main>
+    <footer class="crm-footer">
+      <div class="container">
+        <small>&copy; {% now 'Y' %} CRM Interno. Todos os direitos reservados.</small>
+      </div>
+    </footer>
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

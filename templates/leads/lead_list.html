@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestão de Leads{% endblock %}
+
+{% block content %}
+  {% if messages %}
+    <ul class="messages">
+      {% for message in messages %}
+        <li class="{{ message.tags }}">{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <section class="grid">
+    <div class="card">
+      <h2>Cadastro de Lead</h2>
+      <p class="card-description">Preencha as etapas abaixo para cadastrar um novo lead e iniciar o acompanhamento comercial.</p>
+      <form method="post" enctype="multipart/form-data" class="lead-form" id="lead-registration-form">
+        {% csrf_token %}
+
+        {% if lead_form.non_field_errors %}
+          <div class="form-alert">
+            {% for error in lead_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+        {% endif %}
+
+        <fieldset class="form-section">
+          <legend>Identificação do Lead</legend>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="{{ lead_form.representative.id_for_label }}">{{ lead_form.representative.label }}</label>
+              {{ lead_form.representative }}
+            </div>
+            <div class="form-group{% if lead_form.person_type.errors %} form-group-error{% endif %}">
+              <label for="{{ lead_form.person_type.id_for_label }}">{{ lead_form.person_type.label }}</label>
+              {{ lead_form.person_type }}
+              {% for error in lead_form.person_type.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+            <div class="form-group{% if lead_form.status.errors %} form-group-error{% endif %}">
+              <label for="{{ lead_form.status.id_for_label }}">{{ lead_form.status.label }}</label>
+              {{ lead_form.status }}
+              {% for error in lead_form.status.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+            <div class="form-group{% if lead_form.source.errors %} form-group-error{% endif %}">
+              <label for="{{ lead_form.source.id_for_label }}">{{ lead_form.source.label }}</label>
+              {{ lead_form.source }}
+              {% for error in lead_form.source.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+            <div class="form-group form-group-full{% if lead_form.notes.errors %} form-group-error{% endif %}">
+              <label for="{{ lead_form.notes.id_for_label }}">{{ lead_form.notes.label }}</label>
+              {{ lead_form.notes }}
+              {% for error in lead_form.notes.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="form-section" data-person-form="pj">
+          <legend>Dados da Pessoa Jurídica</legend>
+          <div class="form-grid">
+            <div class="form-group form-group-inline{% if pj_form.cnpj.errors %} form-group-error{% endif %}">
+              <label for="{{ pj_form.cnpj.id_for_label }}">{{ pj_form.cnpj.label }}</label>
+              <div class="input-with-button">
+                {{ pj_form.cnpj }}
+                <button type="button" class="button button-secondary" data-cnpj-lookup data-cnpj-url="{{ cnpj_lookup_url }}">Buscar na Receita</button>
+              </div>
+              <small>Informe o CNPJ e clique em &ldquo;Buscar na Receita&rdquo; para preencher os dados automaticamente.</small>
+              {% for error in pj_form.cnpj.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+            {% for field in pj_form %}
+              {% if field.name != 'cnpj' %}
+                <div class="form-group{% if field.errors %} form-group-error{% endif %}">
+                  <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  {{ field }}
+                  {% for error in field.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+          <div class="form-alert" data-feedback-target="cnpj"></div>
+        </fieldset>
+
+        <fieldset class="form-section" data-person-form="pf">
+          <legend>Dados da Pessoa Física</legend>
+          <div class="form-grid">
+            {% for field in pf_form %}
+              <div class="form-group{% if field.errors %} form-group-error{% endif %}">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<span class="error">{{ error }}</span>{% endfor %}
+              </div>
+            {% endfor %}
+          </div>
+        </fieldset>
+
+        <fieldset class="form-section">
+          <legend>Dados Comerciais</legend>
+          <div class="form-grid">
+            {% for field in commercial_form %}
+              <div class="form-group{% if field.errors %} form-group-error{% endif %}">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+                {% for error in field.errors %}<span class="error">{{ error }}</span>{% endfor %}
+              </div>
+            {% endfor %}
+          </div>
+        </fieldset>
+
+        <fieldset class="form-section">
+          <legend>Documentos do Lead</legend>
+          <div class="form-grid">
+            {% for field in documents_form %}
+              <div class="form-group{% if field.errors %} form-group-error{% endif %}">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<span class="error">{{ error }}</span>{% endfor %}
+              </div>
+            {% endfor %}
+          </div>
+        </fieldset>
+
+        <div class="form-actions">
+          <button type="submit" class="button button-primary">Salvar lead</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Leads Recentes</h2>
+      <p class="card-description">Acompanhe os cadastros realizados e visualize os dados principais de cada lead.</p>
+      {% if leads %}
+        <table class="lead-table">
+          <thead>
+            <tr>
+              <th>Lead</th>
+              <th>Tipo</th>
+              <th>Representante</th>
+              <th>Status</th>
+              <th>Concessionária</th>
+              <th>Valor Última Fatura</th>
+              <th>Criado em</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for lead in leads %}
+              <tr>
+                <td>{{ lead.display_name }}</td>
+                <td>{{ lead.get_person_type_display }}</td>
+                <td>{{ lead.representative.get_full_name|default:lead.representative.username }}</td>
+                <td><span class="tag status-{{ lead.status }}">{{ lead.get_status_display }}</span></td>
+                <td>{{ lead.commercial.energy_provider|default:'-' }}</td>
+                <td>
+                  {% if lead.commercial %}
+                    R$ {{ lead.commercial.last_energy_bill_amount|floatformat:2 }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>{{ lead.created_at|date:'d/m/Y H:i' }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="empty-state">Cadastre o primeiro lead para começar a acompanhar o funil.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'js/lead_forms.js' %}"></script>
+{% endblock %}
